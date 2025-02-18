@@ -9,23 +9,28 @@ if (!isset($_SESSION['admin_id'])) {
 
 require 'db.php';
 
-// Initialize search query
+// Handle Search
 $search_query = '';
-
-// Check if the search form is submitted
 if (isset($_GET['search'])) {
     $search_query = trim($_GET['search']);
 }
 
-// Fetch warehouse items, optionally filtering by search query
+// Fetch warehouse items with search functionality
 if (!empty($search_query)) {
-    $stmt = $pdo->prepare('SELECT * FROM warehouses WHERE item_name LIKE ? OR sku LIKE ?');
+    $stmt = $pdo->prepare('SELECT * FROM warehouses WHERE item_name LIKE ? OR sku LIKE ? ORDER BY created_at DESC');
     $stmt->execute(['%' . $search_query . '%', '%' . $search_query . '%']);
 } else {
-    $stmt = $pdo->query('SELECT * FROM warehouses');
+    $stmt = $pdo->query('SELECT * FROM warehouses ORDER BY created_at DESC');
 }
 
 $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Calculate statistics
+$total_products = count($items);
+$total_quantity = array_sum(array_column($items, 'quantity'));
+$low_stock_items = count(array_filter($items, function($item) {
+    return $item['quantity'] <= 5;
+}));
 
 // Display success or error message if set
 if (isset($_SESSION['success_message'])) {
@@ -44,97 +49,254 @@ if (isset($_SESSION['error_message'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Warehouse Dashboard</title>
-    <!-- Bootstrap 5 CSS (CDN) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        /* Style to ensure images fill the box and maintain aspect ratio */
-        .product-image {
-            width: 150px; /* Set the desired width */
-            height: 150px; /* Set the desired height */
-            object-fit: cover; /* Ensures the image fills the container without distortion */
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
-<body class="bg-light">
-
-    <div class="container my-5">
-        <h1 class="text-center mb-4">Warehouse Dashboard</h1>
-
-        <!-- Display success or error message if set -->
-        <?php if (isset($success_message)): ?>
-            <div class="alert alert-success">
-                <?= htmlspecialchars($success_message); ?>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="dashboard.php">
+                <i class="bi bi-box-seam me-2"></i>WareTrack Pro
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.php">
+                            <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="add_product.php">
+                            <i class="bi bi-plus-circle me-1"></i>Add Product
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="reports.php">
+                            <i class="bi bi-graph-up me-1"></i>Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="logout.php">
+                            <i class="bi bi-box-arrow-right me-1"></i>Logout
+                        </a>
+                    </li>
+                </ul>
             </div>
-        <?php endif; ?>
+        </div>
+    </nav>
 
-        <?php if (isset($error_message)): ?>
-            <div class="alert alert-danger">
-                <?= htmlspecialchars($error_message); ?>
-            </div>
-        <?php endif; ?>
-
-        <div class="d-flex justify-content-between mb-4">
-            <a href="logout.php" class="btn btn-danger">Logout</a>
-            <a href="add_product.php" class="btn btn-primary">Add New Product</a>
+    <div class="container my-4">
+        <!-- Page Header -->
+        <div class="page-header text-center">
+            <h1 class="display-4">Warehouse Dashboard</h1>
+            <p class="lead text-muted">Manage your inventory efficiently</p>
         </div>
 
-        <!-- Search form -->
-        <form method="GET" class="d-flex mb-4">
-            <input type="text" name="search" value="<?= htmlspecialchars($search_query); ?>" class="form-control me-2" placeholder="Search by item name or SKU" aria-label="Search">
-            <button type="submit" class="btn btn-success">Search</button>
-        </form>
+        <!-- Stats Cards -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card stats-card p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Total Products</h6>
+                            <h2 class="mb-0"><?= $total_products ?></h2>
+                        </div>
+                        <div class="icon">
+                            <i class="bi bi-box"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stats-card p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Total Items</h6>
+                            <h2 class="mb-0"><?= $total_quantity ?></h2>
+                        </div>
+                        <div class="icon">
+                            <i class="bi bi-collection"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stats-card p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Low Stock Items</h6>
+                            <h2 class="mb-0"><?= $low_stock_items ?></h2>
+                        </div>
+                        <div class="icon">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <h2>Product List</h2>
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped">
-                <thead class="table-light">
-                    <tr>
-                        <th>Image</th>
-                        <th>Item Name</th>
-                        <th>SKU</th>
-                        <th>Quantity</th>
-                        <th>Rack Zone</th>
-                        <th>Rack Number</th>
-                        <th>Added On</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (count($items) > 0): ?>
-                        <?php foreach ($items as $item): ?>
+        <!-- Search and Actions -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <form method="GET" class="search-wrapper">
+                            <i class="bi bi-search search-icon"></i>
+                            <input type="text" name="search" 
+                                   value="<?= htmlspecialchars($search_query); ?>" 
+                                   class="form-control" 
+                                   placeholder="Search products by name or SKU...">
+                        </form>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a href="add_product.php" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>Add New Product
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Table -->
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
                             <tr>
-                                <td>
-                                    <?php if ($item['image']): ?>
-                                        <img src="<?= htmlspecialchars($item['image']); ?>" alt="Product Image" class="product-image">
-                                    <?php else: ?>
-                                        No image
-                                    <?php endif; ?>
-                                </td>
-                                <td><?= htmlspecialchars($item['item_name']); ?></td>
-                                <td><?= htmlspecialchars($item['sku']); ?></td>
-                                <td><?= $item['quantity']; ?></td>
-                                <td><?= htmlspecialchars($item['rackzone']); ?></td>
-                                <td><?= htmlspecialchars($item['racknumber']); ?></td>
-                                <td><?= $item['created_at']; ?></td>
-                                <td>
-                                    <a href="view_product.php?id=<?= $item['id']; ?>" class="btn btn-info btn-sm">View</a>
-                                    <a href="edit_product.php?id=<?= $item['id']; ?>" class="btn btn-warning btn-sm">Edit</a>
-                                    <a href="delete_product.php?id=<?= $item['id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this product?');">Delete</a>
-                                </td>
+                                <th>Image</th>
+                                <th>Item Name</th>
+                                <th>SKU</th>
+                                <th>Quantity</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Actions</th>
                             </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="8" class="text-center">No products found.</td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($items as $item): ?>
+                                <tr class="animate-fade-in">
+                                    <td>
+                                        <?php if ($item['image']): ?>
+                                            <img src="<?= htmlspecialchars($item['image']); ?>" 
+                                                 alt="<?= htmlspecialchars($item['item_name']); ?>" 
+                                                 class="product-image">
+                                        <?php else: ?>
+                                            <div class="product-image bg-light d-flex align-items-center justify-content-center">
+                                                <i class="bi bi-image text-muted"></i>
+                                            </div>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <strong><?= htmlspecialchars($item['item_name']); ?></strong>
+                                        <br>
+                                        <small class="text-muted">Added: <?= date('M d, Y', strtotime($item['created_at'])); ?></small>
+                                    </td>
+                                    <td><span class="badge bg-light text-dark"><?= htmlspecialchars($item['sku']); ?></span></td>
+                                    <td>
+                                        <?php
+                                        $quantity = $item['quantity'];
+                                        $badgeClass = $quantity > 10 ? 'bg-success' : ($quantity > 5 ? 'bg-warning' : 'bg-danger');
+                                        ?>
+                                        <span class="badge <?= $badgeClass ?>"><?= $quantity ?></span>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted">
+                                            <?= htmlspecialchars($item['rackzone']); ?> - 
+                                            <?= htmlspecialchars($item['racknumber']); ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <?php
+                                        // Determine stock status
+                                        if ($quantity <= 0) {
+                                            echo '<span class="badge bg-danger">Out of Stock</span>';
+                                        } elseif ($quantity <= 5) {
+                                            echo '<span class="badge bg-warning">Low Stock</span>';
+                                        } else {
+                                            echo '<span class="badge bg-success">In Stock</span>';
+                                        }
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group action-buttons">
+                                            <a href="view_product.php?id=<?= $item['id']; ?>" 
+                                               class="btn btn-sm btn-outline-primary" 
+                                               title="View Details">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="edit_product.php?id=<?= $item['id']; ?>" 
+                                               class="btn btn-sm btn-outline-warning"
+                                               title="Edit Product">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <form method="POST" action="delete_product.php" class="d-inline">
+                                                <input type="hidden" name="product_id" value="<?= $item['id']; ?>">
+                                                <button type="submit" 
+                                                        class="btn btn-sm btn-outline-danger"
+                                                        onclick="return confirm('Are you sure you want to delete this product?');"
+                                                        title="Delete Product">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Bootstrap 5 JS (CDN) -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    // Enable tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+
+    // Add loading state to buttons
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function() {
+            const button = this.querySelector('button[type="submit"]');
+            if (button) {
+                button.classList.add('btn-loading');
+                button.disabled = true;
+            }
+        });
+    });
+
+    // Search form enhancement
+    const searchInput = document.querySelector('input[name="search"]');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            if (this.value.length > 2 || this.value.length === 0) {
+                this.form.submit();
+            }
+        });
+    }
+
+    // Replace the existing delete form JavaScript with this:
+    document.querySelectorAll('.delete-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const productName = this.closest('tr').querySelector('strong').textContent;
+            
+            if (confirm(`Are you sure you want to delete "${productName}"?`)) {
+                form.submit();
+            }
+        });
+    });
+    </script>
 </body>
 </html>

@@ -59,56 +59,69 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login</title>
-
-    <!-- Bootstrap 5 CSS -->
+    <title>Login - Warehouse Manager</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
-<body class="bg-light">
-
+<body>
     <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <h1 class="text-center my-5">Admin Login</h1>
-
-                <!-- Display success message if set -->
-                <?php if (isset($success_message)): ?>
-                    <div class="alert alert-success">
-                        <?= htmlspecialchars($success_message); ?>
-                    </div>
-                <?php endif; ?>
-
-                <!-- Display error message if set -->
-                <?php if (isset($error_message)): ?>
-                    <div class="alert alert-danger">
-                        <?= htmlspecialchars($error_message); ?>
-                    </div>
-                <?php endif; ?>
-
-                <!-- Login Form -->
-                <form method="POST" action="login.php">
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Username</label>
-                        <input type="text" name="username" class="form-control" required>
+        <div class="row justify-content-center min-vh-100 align-items-center">
+            <div class="col-md-5">
+                <div class="card p-4">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-box-seam display-1 text-primary"></i>
+                        <h2 class="mt-3">Welcome Back</h2>
+                        <p class="text-muted">Please login to continue</p>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" name="password" class="form-control" required>
+                    <?php if (isset($success_message)): ?>
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle"></i> <?= htmlspecialchars($success_message); ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (isset($error_message)): ?>
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-circle"></i> <?= htmlspecialchars($error_message); ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <form method="POST" action="login.php">
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-person"></i>
+                                </span>
+                                <input type="text" name="username" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-lock"></i>
+                                </span>
+                                <input type="password" name="password" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mb-3">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </button>
+                    </form>
+
+                    <div class="text-center">
+                        <p class="mb-0">Don't have an account? <a href="register.php">Register here</a></p>
                     </div>
-
-                    <button type="submit" class="btn btn-primary w-100">Login</button>
-                </form>
-
-                <div class="text-center mt-4">
-                    <p>Don't have an account? <a href="register.php">Register here</a></p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap 5 JS and Popper.js -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

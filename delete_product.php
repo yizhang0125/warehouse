@@ -1,6 +1,5 @@
 <?php
 session_start();
-require 'db.php';
 
 // If user is not logged in, redirect to login page
 if (!isset($_SESSION['admin_id'])) {
@@ -8,17 +7,20 @@ if (!isset($_SESSION['admin_id'])) {
     exit;
 }
 
-// Check if product ID is provided
-if (isset($_GET['id'])) {
-    $id = (int) $_GET['id'];
+require 'db.php';
 
-    // Delete the product from the database
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['product_id'])) {
+    $product_id = (int) $_POST['product_id'];
+    
+    // Delete the product from database
     $stmt = $pdo->prepare('DELETE FROM warehouses WHERE id = ?');
-    if ($stmt->execute([$id])) {
+    if ($stmt->execute([$product_id])) {
         $_SESSION['success_message'] = "Product deleted successfully!";
     } else {
-        $_SESSION['error_message'] = "Failed to delete the product. Please try again.";
+        $_SESSION['error_message'] = "Failed to delete product.";
     }
+} else {
+    $_SESSION['error_message'] = "Invalid request.";
 }
 
 header('Location: dashboard.php');
