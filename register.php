@@ -2,49 +2,39 @@
 session_start();
 require 'db.php';
 
-// Check if the admin is already logged in, if so, redirect to the dashboard
+// If user is already logged in, redirect to dashboard
 if (isset($_SESSION['admin_id'])) {
     header('Location: dashboard.php');
     exit;
 }
 
-// Handle form submission
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['register'])) {
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
     $confirm_password = trim($_POST['confirm_password']);
 
-    // Validate the input
-    $errors = [];
+    // Validate input
     if (empty($username) || empty($password) || empty($confirm_password)) {
-        $errors[] = "All fields are required.";
-    }
-
-    if ($password !== $confirm_password) {
-        $errors[] = "Passwords do not match.";
-    }
-
-    if (strlen($password) < 6) {
-        $errors[] = "Password must be at least 6 characters long.";
-    }
-
-    // Check if the username already exists
-    $stmt = $pdo->prepare('SELECT * FROM admins WHERE username = ?');
-    $stmt->execute([$username]);
-    if ($stmt->fetch()) {
-        $errors[] = "Username already exists.";
-    }
-
-    // If there are no errors, hash the password and insert the new admin
-    if (empty($errors)) {
-        $hashed_password = password_hash($password, PASSWORD_BCRYPT);
-        $stmt = $pdo->prepare('INSERT INTO admins (username, password) VALUES (?, ?)');
-        if ($stmt->execute([$username, $hashed_password])) {
-            $_SESSION['success_message'] = "Admin registered successfully! You can now log in.";
-            header('Location: login.php');
-            exit;
+        $_SESSION['error_message'] = "All fields are required.";
+    } elseif ($password !== $confirm_password) {
+        $_SESSION['error_message'] = "Passwords do not match.";
+    } else {
+        // Check if username already exists
+        $stmt = $pdo->prepare('SELECT id FROM admins WHERE username = ?');
+        $stmt->execute([$username]);
+        if ($stmt->fetch()) {
+            $_SESSION['error_message'] = "Username already exists.";
         } else {
-            $errors[] = "Failed to register admin. Please try again.";
+            // Insert new admin
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = $pdo->prepare('INSERT INTO admins (username, password) VALUES (?, ?)');
+            if ($stmt->execute([$username, $hashed_password])) {
+                $_SESSION['success_message'] = "Registration successful! Please login.";
+                header('Location: login.php');
+                exit;
+            } else {
+                $_SESSION['error_message'] = "Registration failed. Please try again.";
+            }
         }
     }
 }
@@ -55,64 +45,124 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['register'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register Admin</title>
-    <!-- Bootstrap 5 CSS (CDN) -->
+    <title>Register - WareTrack Pro</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
-<body class="bg-light">
+<body>
     <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <h1 class="text-center my-5">Register Admin</h1>
-
-                <!-- Display success message if set -->
-                <?php if (isset($_SESSION['success_message'])): ?>
-                    <div class="alert alert-success">
-                        <?= htmlspecialchars($_SESSION['success_message']); ?>
-                    </div>
-                    <?php unset($_SESSION['success_message']); ?>
-                <?php endif; ?>
-
-                <!-- Display error messages if set -->
-                <?php if (!empty($errors)): ?>
-                    <div class="alert alert-danger">
-                        <ul>
-                            <?php foreach ($errors as $error): ?>
-                                <li><?= htmlspecialchars($error); ?></li>
-                            <?php endforeach; ?>
-                        </ul>
-                    </div>
-                <?php endif; ?>
-
-                <!-- Registration Form -->
-                <form method="POST" action="register.php">
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Username:</label>
-                        <input type="text" name="username" class="form-control" required>
+        <div class="row justify-content-center min-vh-100 align-items-center">
+            <div class="col-md-5">
+                <div class="card p-4">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-box-seam display-1 text-primary"></i>
+                        <h2 class="mt-3">Create Account</h2>
+                        <p class="text-muted">Join WareTrack Pro today</p>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password:</label>
-                        <input type="password" name="password" class="form-control" required>
+                    <?php if (isset($_SESSION['error_message'])): ?>
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-circle me-2"></i>
+                            <?= htmlspecialchars($_SESSION['error_message']); ?>
+                        </div>
+                        <?php unset($_SESSION['error_message']); ?>
+                    <?php endif; ?>
+
+                    <form method="POST" action="register.php" class="needs-validation" novalidate>
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-person"></i>
+                                </span>
+                                <input type="text" 
+                                       name="username" 
+                                       class="form-control" 
+                                       required
+                                       pattern=".{3,}"
+                                       title="Username must be at least 3 characters">
+                                <div class="invalid-feedback">
+                                    Please choose a username (minimum 3 characters)
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-lock"></i>
+                                </span>
+                                <input type="password" 
+                                       name="password" 
+                                       class="form-control" 
+                                       required
+                                       pattern=".{6,}"
+                                       title="Password must be at least 6 characters">
+                                <div class="invalid-feedback">
+                                    Password must be at least 6 characters
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Confirm Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-lock-fill"></i>
+                                </span>
+                                <input type="password" 
+                                       name="confirm_password" 
+                                       class="form-control" 
+                                       required>
+                                <div class="invalid-feedback">
+                                    Please confirm your password
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mb-3">
+                            <i class="bi bi-person-plus me-2"></i>Create Account
+                        </button>
+                    </form>
+
+                    <div class="text-center">
+                        <p class="mb-0">Already have an account? <a href="login.php">Login here</a></p>
                     </div>
-
-                    <div class="mb-3">
-                        <label for="confirm_password" class="form-label">Confirm Password:</label>
-                        <input type="password" name="confirm_password" class="form-control" required>
-                    </div>
-
-                    <button type="submit" name="register" class="btn btn-primary w-100">Register</button>
-                </form>
-
-                <div class="text-center mt-4">
-                    <p>Already have an account? <a href="login.php">Login here</a></p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap 5 JS (CDN) -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    // Form validation
+    (function () {
+        'use strict'
+        var forms = document.querySelectorAll('.needs-validation')
+        Array.prototype.slice.call(forms)
+            .forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+    })()
+
+    // Password match validation
+    document.querySelector('input[name="confirm_password"]').addEventListener('input', function() {
+        const password = document.querySelector('input[name="password"]').value;
+        if (this.value !== password) {
+            this.setCustomValidity('Passwords do not match');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+    </script>
 </body>
 </html>
