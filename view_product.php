@@ -137,6 +137,15 @@ if (!$product) {
 
                                     <div class="info-item">
                                         <label class="info-label">
+                                            <i class="bi bi-currency-dollar text-primary me-2"></i>Price
+                                        </label>
+                                        <p class="info-value">
+                                            $<?= number_format($product['price'], 2); ?>
+                                        </p>
+                                    </div>
+
+                                    <div class="info-item">
+                                        <label class="info-label">
                                             <i class="bi bi-geo-alt text-primary me-2"></i>Location
                                         </label>
                                         <p class="info-value">

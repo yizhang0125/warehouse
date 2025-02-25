@@ -177,6 +177,7 @@ if (isset($_SESSION['error_message'])) {
                                 <th>Item Name</th>
                                 <th>SKU</th>
                                 <th>Quantity</th>
+                                <th>Price</th>
                                 <th>Location</th>
                                 <th>Status</th>
                                 <th>Actions</th>
@@ -208,6 +209,11 @@ if (isset($_SESSION['error_message'])) {
                                         $badgeClass = $quantity > 10 ? 'bg-success' : ($quantity > 5 ? 'bg-warning' : 'bg-danger');
                                         ?>
                                         <span class="badge <?= $badgeClass ?>"><?= $quantity ?></span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark">
+                                            $<?= number_format($item['price'], 2); ?>
+                                        </span>
                                     </td>
                                     <td>
                                         <span class="text-muted">

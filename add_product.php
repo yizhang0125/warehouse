@@ -10,16 +10,17 @@ if (!isset($_SESSION['admin_id'])) {
 require 'db.php';
 
 // Handle form submission to add a new product
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_product'])) {
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $item_name = trim($_POST['item_name']);
     $sku = trim($_POST['sku']);
     $quantity = (int) $_POST['quantity'];
+    $price = (float) $_POST['price'];
     $rackzone = trim($_POST['rackzone']);
     $racknumber = trim($_POST['racknumber']);
     $image = $_FILES['image']['name'];
 
     // Validate input
-    if (empty($item_name) || empty($sku) || empty($quantity) || empty($rackzone) || empty($racknumber) || empty($image)) {
+    if (empty($item_name) || empty($sku) || empty($quantity) || empty($rackzone) || empty($racknumber) || empty($price)) {
         $_SESSION['error_message'] = "All fields are required.";
         header('Location: add_product.php');
         exit;
@@ -49,8 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_product'])) {
     }
 
     // Insert new product into the database
-    $stmt = $pdo->prepare('INSERT INTO warehouses (item_name, sku, quantity, rackzone, racknumber, image) VALUES (?, ?, ?, ?, ?, ?)');
-    if ($stmt->execute([$item_name, $sku, $quantity, $rackzone, $racknumber, $image_path])) {
+    $stmt = $pdo->prepare('INSERT INTO warehouses (item_name, sku, quantity, price, rackzone, racknumber, image) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    if ($stmt->execute([$item_name, $sku, $quantity, $price, $rackzone, $racknumber, $image_path])) {
         $_SESSION['success_message'] = "Product added successfully!";
         header('Location: dashboard.php');
         exit;
@@ -167,7 +168,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_product'])) {
                                         <span class="input-group-text">
                                             <i class="bi bi-123"></i>
                                         </span>
-                                        <input type="number" class="form-control" name="quantity" min="0" required>
+                                        <input type="number" class="form-control" name="quantity" required min="0">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Price</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-currency-dollar"></i>
+                                        </span>
+                                        <input type="number" 
+                                               class="form-control" 
+                                               name="price" 
+                                               step="0.01" 
+                                               min="0" 
+                                               required 
+                                               placeholder="0.00">
                                     </div>
                                 </div>
 
@@ -185,7 +202,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_product'])) {
                                         </select>
                                     </div>
                                 </div>
+                            </div>
 
+                            <div class="row">
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Rack Number</label>
                                     <div class="input-group">

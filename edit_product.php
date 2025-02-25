@@ -34,12 +34,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_product'])) {
     $item_name = trim($_POST['item_name']);
     $sku = trim($_POST['sku']);
     $quantity = (int) $_POST['quantity'];
+    $price = (float) $_POST['price'];
     $rackzone = trim($_POST['rackzone']);
     $racknumber = trim($_POST['racknumber']);
     $image = $_FILES['image']['name'];
 
     // Validate input
-    if (empty($item_name) || empty($sku) || empty($quantity) || empty($rackzone) || empty($racknumber)) {
+    if (empty($item_name) || empty($sku) || empty($quantity) || empty($rackzone) || empty($racknumber) || empty($price)) {
         $_SESSION['error_message'] = "All fields are required.";
         header('Location: edit_product.php?id=' . $product_id);
         exit;
@@ -76,8 +77,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_product'])) {
     }
 
     // Update the product in the database
-    $stmt = $pdo->prepare('UPDATE warehouses SET item_name = ?, sku = ?, quantity = ?, rackzone = ?, racknumber = ?, image = ? WHERE id = ?');
-    if ($stmt->execute([$item_name, $sku, $quantity, $rackzone, $racknumber, $image_path, $product_id])) {
+    $stmt = $pdo->prepare('UPDATE warehouses SET item_name = ?, sku = ?, quantity = ?, price = ?, rackzone = ?, racknumber = ?, image = ? WHERE id = ?');
+    if ($stmt->execute([$item_name, $sku, $quantity, $price, $rackzone, $racknumber, $image_path, $product_id])) {
         $_SESSION['success_message'] = "Product updated successfully!";
         header('Location: dashboard.php');
         exit;
@@ -215,6 +216,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_product'])) {
                                 </div>
 
                                 <div class="col-md-4 mb-3">
+                                    <label class="form-label">Price</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-currency-dollar"></i>
+                                        </span>
+                                        <input type="number" 
+                                               class="form-control" 
+                                               name="price" 
+                                               value="<?= number_format($product['price'], 2); ?>"
+                                               step="0.01" 
+                                               min="0" 
+                                               required>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4 mb-3">
                                     <label class="form-label">Rack Zone</label>
                                     <div class="input-group">
                                         <span class="input-group-text">
@@ -227,7 +244,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_product'])) {
                                         </select>
                                     </div>
                                 </div>
+                            </div>
 
+                            <div class="row">
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Rack Number</label>
                                     <div class="input-group">
