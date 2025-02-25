@@ -205,6 +205,7 @@ body {
 
 .search-wrapper .form-control {
   padding-left: 3rem;
+  padding-right: 3rem;
 }
 
 .search-icon {
@@ -213,6 +214,15 @@ body {
   top: 50%;
   transform: translateY(-50%);
   color: var(--gray);
+}
+
+.search-spinner {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
 }
 
 /* Animations */
@@ -777,4 +787,32 @@ canvas {
     .table td {
         padding: 0.75rem;
     }
+}
+
+/* Add animation for search results */
+.table tbody tr {
+    transition: opacity 0.3s ease;
+}
+
+.table tbody tr.fade-out {
+    opacity: 0;
+}
+
+.table tbody tr.fade-in {
+    opacity: 1;
+}
+
+/* Search Results Animation */
+.table tbody tr {
+    transition: all 0.3s ease;
+}
+
+.table tbody tr.fade-enter {
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.table tbody tr.fade-enter-active {
+    opacity: 1;
+    transform: translateY(0);
 } 

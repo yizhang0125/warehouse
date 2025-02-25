@@ -13,16 +13,13 @@ require 'db.php';
 $search_query = '';
 if (isset($_GET['search'])) {
     $search_query = trim($_GET['search']);
-}
-
-// Fetch warehouse items with search functionality
-if (!empty($search_query)) {
+    
+    // Fetch warehouse items with search functionality
     $stmt = $pdo->prepare('SELECT * FROM warehouses WHERE item_name LIKE ? OR sku LIKE ? ORDER BY created_at DESC');
     $stmt->execute(['%' . $search_query . '%', '%' . $search_query . '%']);
 } else {
     $stmt = $pdo->query('SELECT * FROM warehouses ORDER BY created_at DESC');
 }
-
 $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Calculate statistics
@@ -146,12 +143,18 @@ if (isset($_SESSION['error_message'])) {
             <div class="card-body">
                 <div class="row align-items-center">
                     <div class="col-md-8">
-                        <form method="GET" class="search-wrapper">
+                        <form method="GET" class="search-wrapper" autocomplete="off" id="searchForm">
                             <i class="bi bi-search search-icon"></i>
-                            <input type="text" name="search" 
+                            <input type="text" 
+                                   name="search" 
+                                   id="searchInput"
                                    value="<?= htmlspecialchars($search_query); ?>" 
                                    class="form-control" 
-                                   placeholder="Search products by name or SKU...">
+                                   placeholder="Search products by name or SKU..."
+                                   autofocus>
+                            <div class="spinner-border text-primary search-spinner" role="status" style="display: none;">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
                         </form>
                     </div>
                     <div class="col-md-4 text-end">
@@ -276,13 +279,57 @@ if (isset($_SESSION['error_message'])) {
         });
     });
 
-    // Search form enhancement
-    const searchInput = document.querySelector('input[name="search"]');
+    // Live Search functionality
+    const searchInput = document.getElementById('searchInput');
+    const searchForm = document.getElementById('searchForm');
+    const spinner = document.querySelector('.search-spinner');
+    let timeout = null;
+
     if (searchInput) {
         searchInput.addEventListener('input', function() {
-            if (this.value.length > 2 || this.value.length === 0) {
-                this.form.submit();
-            }
+            // Show spinner
+            spinner.style.display = 'block';
+            
+            // Clear the existing timeout
+            clearTimeout(timeout);
+            
+            // Set a new timeout
+            timeout = setTimeout(() => {
+                // Get the search query
+                const query = this.value.trim();
+                
+                // Create URL with search parameter
+                const url = new URL(window.location.href);
+                url.searchParams.set('search', query);
+                
+                // Fetch results
+                fetch(url)
+                    .then(response => response.text())
+                    .then(html => {
+                        // Create a temporary element to parse the HTML
+                        const temp = document.createElement('div');
+                        temp.innerHTML = html;
+                        
+                        // Get the new table body
+                        const newTableBody = temp.querySelector('.table tbody');
+                        const currentTableBody = document.querySelector('.table tbody');
+                        
+                        // Update the table body with new results
+                        if (newTableBody && currentTableBody) {
+                            currentTableBody.innerHTML = newTableBody.innerHTML;
+                        }
+                        
+                        // Update the URL without refreshing the page
+                        window.history.pushState({}, '', url);
+                        
+                        // Hide spinner
+                        spinner.style.display = 'none';
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        spinner.style.display = 'none';
+                    });
+            }, 300); // Will search 300ms after user stops typing
         });
     }
 

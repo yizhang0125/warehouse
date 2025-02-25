@@ -59,7 +59,7 @@ CREATE TABLE `warehouses` (
   `image` varchar(255) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -68,7 +68,7 @@ CREATE TABLE `warehouses` (
 
 LOCK TABLES `warehouses` WRITE;
 /*!40000 ALTER TABLE `warehouses` DISABLE KEYS */;
-INSERT INTO `warehouses` VALUES (2,'Laptop Mag','2',500,'Zone A','D12332D','uploads/Laptop Mag.jpg','2024-12-03 07:12:37'),(3,'Phone Holder','1',60,'Zone B','GAS525D','uploads/phone_holder.jpg','2024-12-03 07:16:06'),(4,'Basues USB Dual Charger','3',100,'Zone C','DA808DB','uploads/USB_dual_charger.png','2024-12-03 07:24:33');
+INSERT INTO `warehouses` VALUES (2,'Controller','CONTROLLER-321',500,'Zone A','D12332D','uploads/Laptop Mag.jpg','2024-12-03 07:12:37'),(3,'Phone Holder','HOLDER-123',60,'Zone B','GAS525D','uploads/phone_holder.jpg','2024-12-03 07:16:06'),(4,'Basues USB Dual Charger','CHARGER-111',200,'Zone C','DA808DB','uploads/USB_dual_charger.png','2024-12-03 07:24:33');
 /*!40000 ALTER TABLE `warehouses` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -81,4 +81,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-02-18  9:57:16
+-- Dump completed on 2025-02-24 13:28:09
